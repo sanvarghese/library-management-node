@@ -19,10 +19,6 @@ export const borrowBook = async (req, res, next) => {
 
             const { userId } = req.userData
 
-            console.log(req.userData, 'user data...!')
-
-            // const { booking_id:bookId, user_id:userId } = req.body
-
             const bookId = req.params.bookId;
 
             //  Find the book
@@ -131,8 +127,6 @@ export const viewBorrowingHistory = async (req, res, next) => {
         }
 
         const { userId, userRole } = req.userData;
-
-        console.log(userId, 'userid')
 
         let logs;
 

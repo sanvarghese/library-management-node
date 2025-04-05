@@ -14,8 +14,6 @@ const generateToken = (id, role) => {
 //  Register User
 export const registerUser = async (req, res, next) => {
 
-    console.log(req.body, "req from register")
-
     try {
 
         const errors = validationResult(req);
@@ -67,9 +65,6 @@ export const loginUser = async (req, res) => {
         } else {
 
             const { email, password } = req.body;
-
-            console.log(req.body, 'req from login')
-
 
             const user = await User.findOne({ email });
 

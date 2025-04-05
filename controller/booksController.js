@@ -91,57 +91,6 @@ export const updateBook = async (req, res, next) => {
     }
 }
 
-// list all books with search functionality
-// export const listAllBooks = async (req, res, next) => {
-//     try {
-//         const errors = validationResult(req);
-//         if (!errors.isEmpty()) {
-//             return next(HttpError.invalidInputs());
-//         }
-
-//         let { page = 0, limit = 10, search = "" } = req.query;
-
-//         console.log("🔍 Query Params:", req.query);
-
-//         const pageNumber = parseInt(page);
-//         const pageSize = parseInt(limit);
-//         const skip = pageNumber * pageSize;
-
-//         const filter = {};
-
-//         if (search.trim()) {
-//             const searchRegex = new RegExp(search.trim(), "i");
-//             filter.$or = [
-//                 { title: { $regex: searchRegex } },
-//                 { author: { $regex: searchRegex } }
-//             ];
-//         }
-
-//         console.log("🔎 Filter Used:", filter);
-
-//         const [books, total] = await Promise.all([
-//             Book.find(filter).skip(skip).limit(pageSize),
-//             Book.countDocuments(filter)
-//         ]);
-
-//         console.log("📚 Books Found:", books.length);
-
-//         return res.status(200).json({
-//             success: true,
-//             data: books,
-//             pagination: {
-//                 total,
-//                 page: pageNumber,
-//                 page_size: pageSize,
-//                 has_more: skip + books.length < total
-//             }
-//         });
-
-//     } catch (error) {
-//         console.error("❌ Error in listAllBooks:", error);
-//         return next(HttpError.internalServer());
-//     }
-// };
 
 export const listAllBooks = async (req, res, next) => {
     try {
