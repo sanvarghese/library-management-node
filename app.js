@@ -12,9 +12,10 @@ import cors from 'cors';
 
 // File Imports
 // import testRoutes from './api/testApis.js';
-import userApis from './api/userApis.js';
+import userApis from './api/todoApis.js';
 import { errorHandler } from './middlewares/error/handleError.js';
 import connectDB from './config/db.js';
+import todoApis from './api/todoApis.js';
 // import connectDB from './config/connectDb.js';
 
 dotenv.config();
@@ -48,7 +49,7 @@ app.get("/", (req, res) => {
 });
 
 // app.use("/api/test", testRoutes);
-app.use("/api/", userApis);
+app.use("/api/", todoApis);
 
 // Middleware for Handling 404
 app.use(function (req, res, next) {

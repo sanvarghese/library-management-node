@@ -1,12 +1,7 @@
-
-
-import Book from "../models/books.js";
-import { HttpError } from "../helpers/errors/httpError.js";
 import { validationResult } from "express-validator";
+import Todo from "../models/todo.js";
 
-//  Create new books
-
-export const addNewBook = async (req, res, next) => {
+export const addNewTodo = async (req, res, next) => {
     try {
         const errors = validationResult(req);
 
@@ -15,22 +10,18 @@ export const addNewBook = async (req, res, next) => {
             return next(HttpError.invalidInputs())
         } else {
 
-            const { title, author, isbn, publishedYear, availableCopies } = req.body
+            const { title, description, status } = req.body
 
-            // const { userId, userRole } = req.userData
+            console.log(req.body, "req from create todo")
 
-            // if (userRole !== 'admin') {
+            const newTodoAdd = new Todo({
+                title, description, status: status || 'pending'
 
-            //     return next(HttpError.unauthorized())
-            // } else {
-
-            const newBookAdd = new Book({
-                title, author, isbn, publishedYear, availableCopies
             })
 
-            await newBookAdd.save()
+            await newTodoAdd.save()
 
-            if (!newBookAdd) {
+            if (!newTodoAdd) {
 
                 return next(HttpError.invalidCredential())
             } else {
@@ -38,10 +29,9 @@ export const addNewBook = async (req, res, next) => {
                     status: true,
                     access_token: null,
                     data: null,
-                    message: 'books added successfully'
+                    message: 'Todo added successfully'
                 })
             }
-            // }
         }
     } catch (error) {
         console.log(error)
@@ -52,7 +42,8 @@ export const addNewBook = async (req, res, next) => {
 
 // /update book
 
-export const updateBook = async (req, res, next) => {
+
+export const updateTodo = async (req, res, next) => {
     try {
         const errors = validationResult(req);
 
@@ -61,16 +52,17 @@ export const updateBook = async (req, res, next) => {
             return next(HttpError.invalidInputs())
         } else {
 
-            const { title, author, isbn, publishedYear, availableCopies } = req.body
+            const { title, description, status } = req.body
+
 
             // const { userId, userRole } = req.userData
-            const bookId = req.params.bookId;
+            const todoId = req.params.id;
 
             const updatesAttributes = {
-                title, author, isbn, publishedYear, availableCopies
+                title, description, status
             }
 
-            const response = await Book.findOneAndUpdate({ _id: bookId }, updatesAttributes)
+            const response = await Todo.findOneAndUpdate({ _id: todoId }, updatesAttributes)
 
             if (!response) {
 
@@ -80,19 +72,19 @@ export const updateBook = async (req, res, next) => {
                     status: true,
                     access_token: null,
                     data: null,
-                    message: 'Book updated successfully'
+                    message: 'Todo updated successfully'
                 })
             }
 
         }
     } catch (error) {
         consoleIt(error)
-        return next(HttpError.internalServer())
+        return next(HttpError.internalServer());
     }
 }
 
 
-export const listAllBooks = async (req, res, next) => {
+export const listAllTodos = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
@@ -106,14 +98,14 @@ export const listAllBooks = async (req, res, next) => {
 
         const matchStage = {};
 
-        if (search.trim()) {
-            const searchQuery = search.toLowerCase();
-            matchStage.$or = [
-                { title: { $regex: searchQuery, $options: "i" } },
-                { author: { $regex: searchQuery, $options: "i" } },
-            ];
+        // if (search.trim()) {
+        //     const searchQuery = search.toLowerCase();
+        //     matchStage.$or = [
+        //         { title: { $regex: searchQuery, $options: "i" } },
+        //         { author: { $regex: searchQuery, $options: "i" } },
+        //     ];
 
-        }
+        // }
 
         const pipeline = [
             { $match: matchStage },
@@ -121,12 +113,9 @@ export const listAllBooks = async (req, res, next) => {
                 $project: {
                     _id: 1,
                     title: 1,
-                    author: 1,
-                    isbn: 1,
-                    publishedYear: 1,
-                    availableCopies	:1,
-                    // createdAt: 1,
-                    // updatedAt: 1
+                    description: 1,
+                    status: 1,
+
                 }
             },
             { $sort: { createdAt: -1 } },
@@ -134,8 +123,8 @@ export const listAllBooks = async (req, res, next) => {
             { $limit: limit },
         ];
 
-        const response = await Book.aggregate(pipeline);
-        const totalCount = await Book.countDocuments(matchStage);
+        const response = await Todo.find({});
+        const totalCount = await Todo.countDocuments(matchStage);
 
 
         return res.status(200).json({
@@ -143,41 +132,42 @@ export const listAllBooks = async (req, res, next) => {
             message: "Books fetched successfully",
             access_token: null,
             data: {
-                books: response,
-                totalCount
+                response,
+                // totalCount
             }
         });
     } catch (error) {
-        consoleIt(error);
         return next(HttpError.internalServer());
     }
 };
 
-export const removeBook = async (req, res, next) => {
+export const getTodo = async (req, res) => {
+    try {
+        const todo = await Todo.findById(req.params.id);
+        if (!todo) {
+            return res.status(404).json({ message: 'Todo not found' });
+        }
+        res.status(200).json(todo); // Directly return the todo object
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error', error: error.message });
+    }
+};
+
+export const removeTodo = async (req, res, next) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return next(HttpError.invalidInputs());
         }
 
-        const bookId = req.params.bookId;
-        const { userId, userRole } = req.userData;
+        const todo = await Todo.findById(req.params.id);
 
-        // Only admin can delete books
-
-        // Check if book exists
-        const book = await Book.findById(bookId);
-        if (!book) {
-            return next(HttpError.notFound('Book not found'));
+        if (!todo) {
+            return res.status(404).json({ message: 'Todo not found' });
         }
 
-        // Remove the book
-        await Book.findByIdAndDelete(bookId);
-
-        return res.status(200).json({
-            status: true,
-            message: 'Book removed successfully',
-        });
+        await Todo.findByIdAndDelete(todo);
+        res.status(200).json({ message: 'Todo removed successfully' });
 
     } catch (error) {
         console.log(error);
